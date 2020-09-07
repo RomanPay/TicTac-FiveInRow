@@ -15,7 +15,7 @@ export default class MainScene extends Phaser.Scene
     playerSign: cellState;
     botSign: cellState;
     minIndex: number;
-    maxIndex: number;    
+    maxIndex: number;
 
     checkMatrix =[
         {x: 0, y: 1},
@@ -49,7 +49,10 @@ export default class MainScene extends Phaser.Scene
         {
             cell.setSign(this.playerSign);
             if (this.checkWin(cell.xArray, cell.yArray, this.playerSign))
+            {
                 this.gameOver(this.playerSign);
+                return;
+            }
             this.moveBot();
             if (this.checkWin(cell.xArray, cell.yArray, this.botSign))
             {
@@ -60,9 +63,11 @@ export default class MainScene extends Phaser.Scene
 
     gameOver(sign: cellState)
     {
+        this.game.input.enabled = false;
         setTimeout(() => {
-            this.scene.start('GameOverScene'), {isWin: sign == this.playerSign}
-        });
+            this.game.input.enabled = true;
+            this.scene.start('GameOverScene', {isWin: (sign == this.playerSign) ? true : false})
+        }, 1500);
     }
 
     checkWin(x: number, y: number, sign: cellState)

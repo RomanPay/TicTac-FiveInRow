@@ -15,10 +15,12 @@ export default class GameOverScene extends Phaser.Scene
     init(data)
     {
         this.isWin = data.isWin;
+        console.log(data);
     }
 
     create()
     {
+        console.log(this.isWin);
         console.log("in game over");
         this.buttonImage = this.add.sprite(this.cameras.main.worldView.x + this.cameras.main.width / 2,
              this.cameras.main.worldView.y + this.cameras.main.width / 2, 'restartButton');
