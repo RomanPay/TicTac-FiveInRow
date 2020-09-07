@@ -1,12 +1,13 @@
 import { Cell, CellEventData} from '../objects/Cell'
 import { cellState } from '../objects/CellState';
-import { Input } from 'phaser';
+// import { Input } from 'phaser';
 
 const NUM_EXPAND_BOARDS = 1;
 const OVER_CELL = 3;
 const CELL_BEFOR_EXPAND = 5;
 
-export default class MainScene extends Phaser.Scene {
+export default class MainScene extends Phaser.Scene
+{
     numTurns: number = 0;
     cell : Cell;
     cellsArray: Cell[][];
@@ -14,7 +15,8 @@ export default class MainScene extends Phaser.Scene {
     playerSign: cellState;
     botSign: cellState;
     minIndex: number;
-    maxIndex: number;
+    maxIndex: number;    
+
     checkMatrix =[
         {x: 0, y: 1},
         {x: 1, y: 1},
@@ -34,8 +36,6 @@ export default class MainScene extends Phaser.Scene {
 
     onClick(data: CellEventData)
     {
-        this.numTurns++;
-
         if (this.numTurns >= 15)
         {
             this.minIndex = 0;
@@ -49,26 +49,44 @@ export default class MainScene extends Phaser.Scene {
         {
             cell.setSign(this.playerSign);
             if (this.checkWin(cell.xArray, cell.yArray, this.playerSign))
-                console.log("win");
+                this.gameOver(this.playerSign);
             this.moveBot();
             if (this.checkWin(cell.xArray, cell.yArray, this.botSign))
-                console.log("bot win");
+            {
+                this.gameOver(this.botSign);
+            }
         }
+    }
+
+    gameOver(sign: cellState)
+    {
+        setTimeout(() => {
+            this.scene.start('GameOverScene'), {isWin: sign == this.playerSign}
+        });
     }
 
     checkWin(x: number, y: number, sign: cellState)
     {
+        this.numTurns++;
         let numSigns: number = 0;
 
         for (let i = this.minIndex; i <= this.maxIndex; i++)
         {
             for (let j = this.minIndex; j <= this.maxIndex; j++)
             {
-
                 for (let direction of this.checkMatrix)
                 {
-                    if (this.checkDirection(i, j, direction, sign) == 5)
-                        return (true);
+                    let y = i;
+                    let x = j;
+                    numSigns = 0;
+                    while (this.checkEdge(y, x) && this.cellsArray[y][x].state == sign)
+                    {
+                        numSigns++;
+                        if (numSigns == 5)
+                             return (true);
+                        y += direction.y;
+                        x += direction.x;
+                    }
                 }
             }
         }
@@ -85,28 +103,8 @@ export default class MainScene extends Phaser.Scene {
             return false;
         if (j < this.minIndex)
             return false;
-        // console.log('[' ,i , ' ', j, ']')    
         return true;
     }
-    // checkLine(direction: any, sign: cellState, board: Cell[][], x:number, y: number)
-    // {
-    //     let numSigns: number = 0;
-    //     let tempX: number = x;
-    //     let tempY: number = y;
-    //     while(board[x][y].state == sign)
-    //     {
-    //         numSigns++;
-    //         if (numSigns == 5)
-    //             return (true);
-    //         x += direction.x;
-    //         y += direction.y;
-    //     }
-    //     if (!this.checkLine(direction * -1, sign, board, x, y))
-    //         ;
-    //     x = tempX;
-    //     y = tempY;
-    //     return (false);
-    // }
 
     checkDirection(x: number, y: number, direction: {x : number, y: number,}, sign: cellState)
     {
@@ -132,8 +130,6 @@ export default class MainScene extends Phaser.Scene {
         let numSignsPlayer: number = 0;
         let cellPlayer: Cell | null = null;
         let cellBot: Cell | null = null;
-
-        this.numTurns++;
 
         for (let y = this.minIndex; y <= this.maxIndex; y++)
         {
@@ -165,21 +161,18 @@ export default class MainScene extends Phaser.Scene {
         if (numSignsBot == 4 && cellBot)
         {
             cellBot.setSign(this.botSign);
-            console.log(1);
             return;
         }
 
         if (numSignsPlayer >= 3 && cellPlayer)
         {
             cellPlayer.setSign(this.botSign);
-            console.log(3);
             return;
         }
 
         if (numSignsBot != 0 && cellBot)
         {
             cellBot.setSign(this.botSign);
-            console.log(2);
             return;
         }
 
@@ -198,16 +191,17 @@ export default class MainScene extends Phaser.Scene {
 
             arr = Phaser.Math.RND.shuffle(arr);
             arr[0].setSign(this.botSign);
-            console.log(4);
         }
     }
 
     create() 
     {
+        this.numTurns = 0;
         this.minIndex = 3;
         this.maxIndex = 7;
         this.playerSign = cellState.cross;
         this.botSign = cellState.ring;
+
         console.log("start main scene")
 
         this.events.on('setSign', (data: CellEventData) => this.onClick(data));
